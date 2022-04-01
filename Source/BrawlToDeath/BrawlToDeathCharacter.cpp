@@ -41,8 +41,9 @@ ABrawlToDeathCharacter::ABrawlToDeathCharacter()
 	CameraBoom->SetupAttachment(RootComponent);
 	CameraBoom->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
 	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
-	CameraBoom->CameraLagMaxDistance = 100.0f;
-	CameraBoom->CameraLagSpeed = 9.0f;
+	CameraBoom->bEnableCameraLag = true;
+	CameraBoom->CameraLagMaxDistance = 130.0f;
+	CameraBoom->CameraLagSpeed = 8.0f;
 
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
@@ -67,9 +68,9 @@ void ABrawlToDeathCharacter::SetupPlayerInputComponent(class UInputComponent* Pl
 {
 	// Set up gameplay key bindings
 	check(PlayerInputComponent);
-	//PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ABrawlToDeathCharacter::SprintStarted);
-	//PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ABrawlToDeathCharacter::SprintStopped);
-	//PlayerInputComponent->BindAction("ToggleRun", IE_Pressed, this, &ABrawlToDeathCharacter::ToggleRun);
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ABrawlToDeathCharacter::SprintStarted);
+	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ABrawlToDeathCharacter::SprintStopped);
+	PlayerInputComponent->BindAction("ToggleRun", IE_Pressed, this, &ABrawlToDeathCharacter::ToggleRun);
 
 	PlayerInputComponent->BindAction("Guarding", IE_Pressed, this, &ABrawlToDeathCharacter::GuardingStarted);
 	PlayerInputComponent->BindAction("Guarding", IE_Released, this, &ABrawlToDeathCharacter::GuardingStopped);
@@ -199,72 +200,65 @@ void ABrawlToDeathCharacter::MoveRight(float Value)
 
 
 
-//void ABrawlToDeathCharacter::ToggleRun()
-//{
-//	if (bIsToggleRun == true)
-//	{
-//		bIsToggleRun = false;
-//
-//
-//	}
-//	else if (bIsToggleRun == false)
-//	{
-//		bIsToggleRun = true;
-//
-//	}
-//}
-//
-//
-//
-//
-//
-//
-//
-//void ABrawlToDeathCharacter::SprintStarted()
-//{
-//	//If combat mode is on it only gets on for a sec so the player cannot dashes constantly
-//	if (bIsCombatMode == true)
-//	{
-//		bIsSprinting = true;
-//
-//		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &ABrawlToDeathCharacter::SprintFalseTimer, 0.5f, false);
-//
-//	}
-//	else if (bIsCombatMode == false)
-//	{
-//		bIsSprinting = true;
-//	}
-//}
-//
-//
-//
-//
-//void ABrawlToDeathCharacter::SprintFalseTimer()
-//{
-//	bIsSprinting = false;
-//}
-//
-//
-//
-//
-//
-//
-//
-//void ABrawlToDeathCharacter::SprintStopped()
-//{
-//	bIsSprinting = false;
-//
-//	if (bIsToggleRun == true)
-//	{
-//		bIsToggleRun = false;
-//	}
-//	else if (bIsToggleRun == false)
-//	{
-//		bIsToggleRun = true;
-//	}
-//	
-//
-//}
+void ABrawlToDeathCharacter::ToggleRun()
+{
+	if (bIsToggleRun == true)
+	{
+		bIsToggleRun = false;
+		Client_SetMaxWalkSpeed(WalkSpeed);
+
+	}
+	else if (bIsToggleRun == false)
+	{
+		bIsToggleRun = true;
+		Client_SetMaxWalkSpeed(RunSpeed);
+
+	}
+}
+
+
+
+void ABrawlToDeathCharacter::SprintFalseTimer()
+{
+	bIsSprinting = false;
+}
+
+
+void ABrawlToDeathCharacter::SprintStarted()
+{
+	//If combat mode is on it only gets on for a sec so the player cannot dashes constantly
+	if (bIsCombatMode == true)
+	{
+		bIsSprinting = true;
+
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &ABrawlToDeathCharacter::SprintFalseTimer, 0.5f, false);
+
+	}
+	else if (bIsCombatMode == false)
+	{
+		bIsSprinting = true;
+		Client_SetMaxWalkSpeed(SprintSpeed);
+	}
+}
+
+
+
+
+void ABrawlToDeathCharacter::SprintStopped()
+{
+	bIsSprinting = false;
+
+	if (bIsToggleRun == true)
+	{
+		Client_SetMaxWalkSpeed(RunSpeed);
+	}
+	else if (bIsToggleRun == false)
+	{
+		Client_SetMaxWalkSpeed(WalkSpeed);
+	}
+	
+
+}
 
 
 
@@ -341,6 +335,21 @@ void ABrawlToDeathCharacter::IsAReleased()
 	bIsA = false;
 	bIsKicking = false;
 	bIsPunching = false;
+}
+
+
+/**  ServerSide Functions*/
+
+
+void ABrawlToDeathCharacter::Client_SetMaxWalkSpeed_Implementation(float Speed)
+{
+	GetCharacterMovement()->MaxWalkSpeed = Speed;
+	Server_SetMaxWalkSpeed(GetCharacterMovement()->MaxWalkSpeed);
+}
+
+void ABrawlToDeathCharacter::Server_SetMaxWalkSpeed_Implementation(float Speed)
+{
+	GetCharacterMovement()->MaxWalkSpeed = Speed;
 }
 
 

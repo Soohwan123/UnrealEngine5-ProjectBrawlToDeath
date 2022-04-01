@@ -224,13 +224,15 @@ protected:
 
 
 
-	///* Handler for toggle run function*/
-	//void ToggleRun();
+	/* Handler for toggle run function*/
+	void ToggleRun();
 
+	/* Handler for CombatMode Sprint */
+	void SprintFalseTimer();
 
-	///** Handler for sprinting */
-	//void SprintStarted();
-	//void SprintStopped();
+	/** Handler for sprinting */
+	void SprintStarted();
+	void SprintStopped();
 
 
 	/*  Handler for turning combat mode on and off*/
@@ -266,6 +268,19 @@ protected:
 
 	/*  Handler for right/left pivot boxing animations*/
 	void PivotAnimationsController();
+
+
+
+	/** Server Side Functions */
+	UFUNCTION(Server, Reliable)
+	void Server_SetMaxWalkSpeed(float Speed);
+	void Server_SetMaxWalkSpeed_Implementation(float Speed);
+
+
+	UFUNCTION(Client, Reliable)
+	void Client_SetMaxWalkSpeed(float Speed);
+	void Client_SetMaxWalkSpeed_Implementation(float Speed);
+
 
 	///** Handler for when a touch input begins. */
 	//void TouchStarted(ETouchIndex::Type FingerIndex, FVector Location);
